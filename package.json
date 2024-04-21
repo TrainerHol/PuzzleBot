@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+    "axios": "^1.4.0",
+    "discord.js": "^14.9.0",
+    "dotenv": "^16.0.3",
+    "mongoose": "^7.3.2"
+  },
+  "name": "v14slashtutorial",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node src/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
