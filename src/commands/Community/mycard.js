@@ -3,7 +3,9 @@ const { EmbedBuilder, AttachmentBuilder } = require("discord.js");
 const { createCanvas, loadImage, registerFont } = require("canvas");
 
 module.exports = {
-  data: new SlashCommandBuilder().setName(`mycard`).setDescription(`Retrieve user card`),
+  data: new SlashCommandBuilder()
+    .setName(`mycard`)
+    .setDescription(`Retrieve user card`),
   async execute(interaction) {
     const user = interaction.options.getUser("user") || interaction.user;
     const member = await interaction.guild.members.fetch(user.id);
@@ -36,7 +38,9 @@ module.exports = {
     ctx.font = "18px Arial";
     //ctx.fillText(`ID: ${user.id}`, canvas.width - 10, 60);
     ctx.fillText(`USER NAENUCKED SUCCESSFULLY`, canvas.width - 10, 60);
-    const attachment = new AttachmentBuilder(canvas.toBuffer(), { name: "user-info.png" });
+    const attachment = new AttachmentBuilder(canvas.toBuffer(), {
+      name: "user-info.png",
+    });
 
     await interaction.reply({ files: [attachment], ephemeral: false });
   },
