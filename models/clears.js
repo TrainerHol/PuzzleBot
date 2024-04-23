@@ -1,6 +1,5 @@
 const Sequelize = require("sequelize");
 const sequelize = require("../utils/database");
-const Puzzles = require("./puzzles");
 
 const Clears = sequelize.define(
   "clears",
@@ -23,12 +22,10 @@ const Clears = sequelize.define(
     indexes: [
       {
         unique: true,
-        fields: ["jumper", "puzzleId"], // Update the unique constraint fields
+        fields: ["jumper", "puzzleId"],
       },
     ],
   },
 );
-
-Clears.belongsTo(Puzzles, { foreignKey: "puzzleId", targetKey: "ID" });
 
 module.exports = Clears;

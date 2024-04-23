@@ -1,5 +1,6 @@
 const Sequelize = require("sequelize");
 const sequelize = require("../utils/database");
+const Clears = require("./clears");
 
 const Puzzles = sequelize.define("puzzles", {
   ID: {
@@ -104,5 +105,7 @@ const Puzzles = sequelize.define("puzzles", {
     allowNull: true,
   },
 });
+
+Puzzles.hasMany(Clears, { foreignKey: "puzzleId", sourceKey: "ID" });
 
 module.exports = Puzzles;

@@ -3,6 +3,7 @@ const Clears = require("../models/clears");
 const Puzzles = require("../models/puzzles");
 const Badges = require("../models/badges");
 const BadgePuzzles = require("../models/badgePuzzles");
+const CardSettings = require("../models/cardSettings");
 const axios = require("axios");
 const { downloadAndInsertPuzzles } = require("./downloadpuzzles");
 require("dotenv").config();
@@ -45,16 +46,14 @@ async function initializeDatabase() {
     console.log("Database connection has been established successfully.");
 
     await Puzzles.sync({ alter: true });
-    console.log("Puzzles table has been synced.");
 
     await Clears.sync({ alter: true });
-    console.log("Clears table has been synced.");
 
     await Badges.sync({ alter: true });
-    console.log("Badges table has been synced.");
 
     await BadgePuzzles.sync({ alter: true });
-    console.log("BadgePuzzles table has been synced.");
+
+    await CardSettings.sync({ alter: true });
 
     // Call the downloadAndInsertPuzzles function from downloadpuzzles.js
     await downloadAndInsertPuzzles();
