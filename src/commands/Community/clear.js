@@ -31,7 +31,7 @@ module.exports = {
       // Create a new clear record
       await Clears.create({
         jumper: interaction.user.id,
-        puzzle: puzzleId,
+        puzzleId: puzzleId, // Use the padded puzzleId value
       });
 
       const puzzleName = puzzle.PuzzleName;

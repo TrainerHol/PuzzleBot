@@ -2,6 +2,7 @@ const sequelize = require("../utils/database");
 const Clears = require("../models/clears");
 const Puzzles = require("../models/puzzles");
 const axios = require("axios");
+const { downloadAndInsertPuzzles } = require("./downloadpuzzles");
 require("dotenv").config();
 
 async function migrateDataFromJson() {
@@ -12,7 +13,11 @@ async function migrateDataFromJson() {
 
     for (const record of data) {
       try {
-        await Clears.create(record);
+        const paddedPuzzleId = record.puzzle.padStart(5, "0");
+        await Clears.create({
+          jumper: record.jumper,
+          puzzleId: paddedPuzzleId,
+        });
         console.log(`Record inserted: ${JSON.stringify(record)}`);
       } catch (error) {
         if (error.name === "SequelizeUniqueConstraintError") {
@@ -37,11 +42,14 @@ async function initializeDatabase() {
     await sequelize.authenticate();
     console.log("Database connection has been established successfully.");
 
+    await Puzzles.sync({ alter: true });
+    console.log("Puzzles table has been synced.");
+
     await Clears.sync({ alter: true });
     console.log("Clears table has been synced.");
 
-    await Puzzles.sync({ alter: true });
-    console.log("Puzzles table has been synced.");
+    // Call the downloadAndInsertPuzzles function from downloadpuzzles.js
+    await downloadAndInsertPuzzles();
 
     const count = await Clears.count();
     if (count === 0) {
@@ -52,6 +60,9 @@ async function initializeDatabase() {
     }
   } catch (error) {
     console.error("Unable to connect to the database or sync tables:", error);
+  } finally {
+    // Close the database connection when done
+    await sequelize.close();
   }
 }
 

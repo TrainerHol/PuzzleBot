@@ -39,21 +39,21 @@ async function downloadAndInsertPuzzles() {
             Season: puzzle.Season,
             Address: puzzle.Address,
           });
-          console.log(`Upserted puzzle with ID: ${puzzle.ID}`);
+          //console.log(`Upserted puzzle with ID: ${puzzle.ID}`);
         } catch (error) {
           console.error(`Error upserting puzzle with ID: ${puzzle.ID}`, error);
         }
       } else {
-        console.log(`Skipping puzzle with empty name: ${puzzle.ID}`);
+        //console.log(`Skipping puzzle with empty name: ${puzzle.ID}`);
       }
     }
 
     console.log("Puzzles data downloaded and upserted successfully.");
   } catch (error) {
     console.error("Error downloading puzzles data:", error);
-  } finally {
-    await sequelize.close();
   }
 }
 
-downloadAndInsertPuzzles();
+module.exports = {
+  downloadAndInsertPuzzles,
+};

@@ -1,5 +1,6 @@
 const Sequelize = require("sequelize");
 const sequelize = require("../utils/database");
+const Puzzles = require("./puzzles");
 
 const Clears = sequelize.define(
   "clears",
@@ -13,23 +14,21 @@ const Clears = sequelize.define(
       type: Sequelize.STRING,
       allowNull: false,
     },
-    puzzle: {
+    puzzleId: {
       type: Sequelize.STRING,
       allowNull: false,
-      set(value) {
-        const formattedValue = String(value).padStart(5, "0");
-        this.setDataValue("puzzle", formattedValue);
-      },
     },
   },
   {
     indexes: [
       {
         unique: true,
-        fields: ["jumper", "puzzle"],
+        fields: ["jumper", "puzzleId"], // Update the unique constraint fields
       },
     ],
   },
 );
+
+Clears.belongsTo(Puzzles, { foreignKey: "puzzleId", targetKey: "ID" });
 
 module.exports = Clears;
