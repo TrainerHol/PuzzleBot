@@ -1,6 +1,8 @@
 const sequelize = require("../utils/database");
 const Clears = require("../models/clears");
 const Puzzles = require("../models/puzzles");
+const Badges = require("../models/badges");
+const BadgePuzzles = require("../models/badgePuzzles");
 const axios = require("axios");
 const { downloadAndInsertPuzzles } = require("./downloadpuzzles");
 require("dotenv").config();
@@ -47,6 +49,12 @@ async function initializeDatabase() {
 
     await Clears.sync({ alter: true });
     console.log("Clears table has been synced.");
+
+    await Badges.sync({ alter: true });
+    console.log("Badges table has been synced.");
+
+    await BadgePuzzles.sync({ alter: true });
+    console.log("BadgePuzzles table has been synced.");
 
     // Call the downloadAndInsertPuzzles function from downloadpuzzles.js
     await downloadAndInsertPuzzles();
