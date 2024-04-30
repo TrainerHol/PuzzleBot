@@ -63,6 +63,10 @@ module.exports = {
         const builder = puzzle.Builder;
         const world = puzzle.World;
         const datacenter = puzzle.Datacenter;
+        const goals = puzzle.GoalsRules;
+        const id = puzzle.ID;
+        // puzzle.M E S P V J G L X
+        const tags = `${puzzle.M}${puzzle.E}${puzzle.S}${puzzle.P}${puzzle.V}${puzzle.J}${puzzle.G}${puzzle.L}${puzzle.X}`;
 
         let stars = "";
         if (rating.match(/^[A-Z]$/)) {
@@ -72,7 +76,8 @@ module.exports = {
           stars = "★".repeat(numStars) + "☆".repeat(5 - numStars);
         }
 
-        response += `- ${puzzleNameResult} by ${builder} (${address}, ${world}, ${datacenter}) ${stars}\n`;
+        response += `- **__${id} ${puzzleNameResult}__** by ${builder} [${tags}]\n**Address:** (${address}, ${world}, ${datacenter}) ${stars}\n`;
+        response += goals ? `**Goals/Rules:** ${goals}\n` : "";
       }
       response += "";
 
