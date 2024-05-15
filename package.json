@@ -5,6 +5,7 @@
     "discord.js": "^14.9.0",
     "dotenv": "^16.0.3",
     "mongoose": "^7.3.2",
+    "node-cron": "^3.0.3",
     "sequelize": "^6.37.3",
     "sqlite3": "^5.1.7"
   },

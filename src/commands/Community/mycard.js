@@ -48,17 +48,19 @@ module.exports = {
     ctx.font = "18px Arial";
     ctx.fillText(`ID: ${user.id}`, canvas.width - 10, 60);
 
-    // Retrieve the number of puzzles cleared by the user for each star rating
-    const clearCounts = await Clears.findAll({
+    // Retrieve the puzzle IDs cleared by the user
+    const clearedPuzzleIds = await Clears.findAll({
       attributes: ["puzzleId"],
       where: { jumper: user.id },
-      include: [
-        {
-          model: Puzzles,
-          attributes: ["Rating"],
-          required: true,
-        },
-      ],
+    });
+
+    // Extract the puzzle IDs into an array
+    const puzzleIds = clearedPuzzleIds.map((clear) => clear.puzzleId);
+
+    // Retrieve the puzzles with the specified IDs and their ratings
+    const clearedPuzzles = await Puzzles.findAll({
+      attributes: ["Rating"],
+      where: { ID: puzzleIds },
     });
 
     const starCounts = {
@@ -69,8 +71,8 @@ module.exports = {
       1: 0,
     };
 
-    clearCounts.forEach((clear) => {
-      const rating = clear.puzzle.Rating;
+    clearedPuzzles.forEach((puzzle) => {
+      const rating = puzzle.Rating;
       if (starCounts[rating] !== undefined) {
         starCounts[rating]++;
       }
