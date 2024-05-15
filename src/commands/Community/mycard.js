@@ -3,6 +3,7 @@ const { AttachmentBuilder } = require("discord.js");
 const { createCanvas, loadImage } = require("canvas");
 const Clears = require("../../../models/clears");
 const Puzzles = require("../../../models/puzzles");
+const CardSettings = require("../../../models/cardSettings");
 const { Op } = require("sequelize");
 
 module.exports = {
@@ -18,11 +19,19 @@ module.exports = {
   async execute(interaction) {
     const user = interaction.options.getUser("user") || interaction.user;
     const member = await interaction.guild.members.fetch(user.id);
-    const avatarURL = user.displayAvatarURL({ extension: "png", size: 256 });
 
-    const tag = member.displayName || user.tag;
+    const cardSettings = await CardSettings.findOne({
+      where: { userId: user.id },
+    });
 
-    const canvas = createCanvas(400, 300);
+    const avatarURL = cardSettings?.cardPhotoUrl
+      ? cardSettings.cardPhotoUrl
+      : user.displayAvatarURL({ extension: "png", size: 256 });
+
+    const characterName =
+      cardSettings?.characterName || member.displayName || user.tag;
+
+    const canvas = createCanvas(800, 600);
     const ctx = canvas.getContext("2d");
 
     ctx.fillStyle = "red";
@@ -44,7 +53,7 @@ module.exports = {
     ctx.fillStyle = "white";
     ctx.font = "24px Arial";
     ctx.textAlign = "right";
-    ctx.fillText(tag, canvas.width - 10, 30);
+    ctx.fillText(characterName, canvas.width - 10, 30);
     ctx.font = "18px Arial";
     ctx.fillText(`ID: ${user.id}`, canvas.width - 10, 60);
 
