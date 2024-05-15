@@ -49,8 +49,15 @@ module.exports = {
 
     const favoriteBadgeMenu = new StringSelectMenuBuilder()
       .setCustomId("favorite_badge")
-      .setPlaceholder("Select your favorite badge")
-      .addOptions(
+      .setPlaceholder("Select your favorite badge");
+
+    const displayBadgesMenu = new StringSelectMenuBuilder()
+      .setCustomId("display_badges")
+      .setPlaceholder("Select badges to display on your card (up to 10)")
+      .setMinValues(0);
+
+    if (userBadges.length > 0) {
+      favoriteBadgeMenu.addOptions(
         new StringSelectMenuOptionBuilder().setLabel("None").setValue("none"),
         ...userBadges.map((badge) =>
           new StringSelectMenuOptionBuilder()
@@ -59,19 +66,17 @@ module.exports = {
         ),
       );
 
-    const displayBadgesMenu = new StringSelectMenuBuilder()
-      .setCustomId("display_badges")
-      .setPlaceholder("Select badges to display on your card (up to 10)")
-      .setMinValues(0)
-      .setMaxValues(Math.min(userBadges.length, 10))
-      .addOptions(
-        new StringSelectMenuOptionBuilder().setLabel("None").setValue("none"),
-        ...userBadges.map((badge) =>
-          new StringSelectMenuOptionBuilder()
-            .setLabel(badge.name)
-            .setValue(badge.id.toString()),
-        ),
-      );
+      displayBadgesMenu
+        .setMaxValues(Math.min(userBadges.length, 10))
+        .addOptions(
+          new StringSelectMenuOptionBuilder().setLabel("None").setValue("none"),
+          ...userBadges.map((badge) =>
+            new StringSelectMenuOptionBuilder()
+              .setLabel(badge.name)
+              .setValue(badge.id.toString()),
+          ),
+        );
+    }
 
     const actionRow1 = new ActionRowBuilder().addComponents(favoriteBadgeMenu);
     const actionRow2 = new ActionRowBuilder().addComponents(displayBadgesMenu);
@@ -83,7 +88,7 @@ module.exports = {
     await interaction.reply({
       content:
         "Please select your favorite badge and badges to display on your card:",
-      components: [actionRow1, actionRow2],
+      components: userBadges.length > 0 ? [actionRow1, actionRow2] : [],
       ephemeral: true,
     });
 
