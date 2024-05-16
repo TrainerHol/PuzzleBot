@@ -21,10 +21,10 @@ async function migrateDataFromJson() {
           jumper: record.jumper,
           puzzleId: paddedPuzzleId,
         });
-        console.log(`Record inserted: ${JSON.stringify(record)}`);
+        //console.log(`Record inserted: ${JSON.stringify(record)}`);
       } catch (error) {
         if (error.name === "SequelizeUniqueConstraintError") {
-          console.log(`Duplicate record skipped: ${JSON.stringify(record)}`);
+          //console.log(`Duplicate record skipped: ${JSON.stringify(record)}`);
         } else {
           console.error(
             `Error inserting record: ${JSON.stringify(record)}`,
@@ -46,13 +46,9 @@ async function initializeDatabase() {
     console.log("Database connection has been established successfully.");
 
     await Puzzles.sync({ alter: true });
-
     await Clears.sync({ alter: true });
-
     await Badges.sync({ alter: true });
-
     await BadgePuzzles.sync({ alter: true });
-
     await CardSettings.sync({ alter: true });
 
     // Call the downloadAndInsertPuzzles function from downloadpuzzles.js

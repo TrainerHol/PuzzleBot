@@ -22,10 +22,4 @@ const BadgePuzzles = sequelize.define("badgePuzzles", {
   },
 });
 
-Badges.belongsToMany(Puzzles, { through: BadgePuzzles, foreignKey: "badgeId" });
-Puzzles.belongsToMany(Badges, {
-  through: BadgePuzzles,
-  foreignKey: "puzzleId",
-});
-
 module.exports = BadgePuzzles;

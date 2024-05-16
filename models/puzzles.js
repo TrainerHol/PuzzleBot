@@ -1,6 +1,8 @@
 const Sequelize = require("sequelize");
 const sequelize = require("../utils/database");
 const Clears = require("./clears");
+const Badges = require("./badges");
+const BadgePuzzles = require("./badgePuzzles");
 
 const Puzzles = sequelize.define("puzzles", {
   ID: {
@@ -107,5 +109,17 @@ const Puzzles = sequelize.define("puzzles", {
 });
 
 Puzzles.hasMany(Clears, { foreignKey: "puzzleId", sourceKey: "ID" });
+Puzzles.belongsToMany(Badges, {
+  through: "badgePuzzles",
+  foreignKey: "puzzleId",
+  otherKey: "badgeId",
+  as: "badges",
+});
+Badges.belongsToMany(Puzzles, {
+  through: "badgePuzzles",
+  foreignKey: "badgeId",
+  otherKey: "puzzleId",
+  as: "puzzles",
+});
 
 module.exports = Puzzles;

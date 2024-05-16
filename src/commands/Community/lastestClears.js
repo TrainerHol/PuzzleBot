@@ -14,8 +14,9 @@ module.exports = {
         .setRequired(true),
     ),
   async execute(interaction) {
-    const puzzleId = interaction.options.getString("puzzle_id");
-
+    const puzzleId = interaction.options
+      .getString("puzzle_id")
+      .padStart(5, "0");
     const puzzle = await Puzzles.findOne({
       where: { ID: puzzleId },
     });
