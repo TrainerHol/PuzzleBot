@@ -26,6 +26,7 @@ module.exports = {
           {
             model: Puzzles,
             through: { attributes: [] },
+            as: "puzzles",
           },
         ],
       });
