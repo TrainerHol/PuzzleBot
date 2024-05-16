@@ -4,6 +4,7 @@ const { createCanvas, loadImage } = require("canvas");
 const Clears = require("../../../models/clears");
 const Puzzles = require("../../../models/puzzles");
 const CardSettings = require("../../../models/cardSettings");
+const Badges = require("../../../models/badges");
 const { Op } = require("sequelize");
 
 module.exports = {
@@ -56,6 +57,47 @@ module.exports = {
     ctx.fillText(characterName, canvas.width - 10, 30);
     ctx.font = "18px Arial";
     ctx.fillText(`ID: ${user.id}`, canvas.width - 10, 60);
+
+    // Retrieve the favorite badge and display badges from card settings
+    const favoriteBadgeId = cardSettings?.favoriteBadge;
+    const displayBadgeIds = cardSettings?.displayBadges || [];
+
+    // Retrieve the favorite badge and display badges data from the database
+    const [favoriteBadge, displayBadges] = await Promise.all([
+      favoriteBadgeId ? Badges.findByPk(favoriteBadgeId) : null,
+      displayBadgeIds.length > 0
+        ? Badges.findAll({ where: { id: displayBadgeIds } })
+        : [],
+    ]);
+
+    // Display the favorite badge title, image, name, and description
+    if (favoriteBadge) {
+      ctx.font = "18px Arial";
+      ctx.textAlign = "left";
+      ctx.fillText(favoriteBadge.title, 20, 90);
+
+      const favoriteBadgeImage = await loadImage(favoriteBadge.imageUrl);
+      ctx.drawImage(favoriteBadgeImage, 20, 100, 50, 50);
+
+      ctx.font = "14px Arial";
+      ctx.fillText(favoriteBadge.name, 80, 120);
+      ctx.fillText(favoriteBadge.description, 80, 140);
+    }
+
+    // Display the list of display badges
+    if (displayBadges.length > 0) {
+      ctx.font = "14px Arial";
+      ctx.textAlign = "right";
+      ctx.fillText("Display Badges:", canvas.width - 20, 100);
+
+      let badgeY = 120;
+      for (const badge of displayBadges) {
+        const badgeImage = await loadImage(badge.imageUrl);
+        ctx.drawImage(badgeImage, canvas.width - 70, badgeY, 50, 50);
+        ctx.fillText(badge.name, canvas.width - 80, badgeY + 25);
+        badgeY += 60;
+      }
+    }
 
     // Retrieve the puzzle IDs cleared by the user
     const clearedPuzzleIds = await Clears.findAll({

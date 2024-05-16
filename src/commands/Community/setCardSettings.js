@@ -3,6 +3,8 @@ const {
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
   ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
 } = require("discord.js");
 const CardSettings = require("../../../models/cardSettings");
 const Badges = require("../../../models/badges");
@@ -47,26 +49,27 @@ module.exports = {
       ],
     });
 
-    const favoriteBadgeMenu = new StringSelectMenuBuilder()
-      .setCustomId("favorite_badge")
-      .setPlaceholder("Select your favorite badge");
-
-    const displayBadgesMenu = new StringSelectMenuBuilder()
-      .setCustomId("display_badges")
-      .setPlaceholder("Select badges to display on your card (up to 10)")
-      .setMinValues(0);
+    const existingSettings = await CardSettings.findOne({
+      where: { userId: interaction.user.id },
+    });
 
     if (userBadges.length > 0) {
-      favoriteBadgeMenu.addOptions(
-        new StringSelectMenuOptionBuilder().setLabel("None").setValue("none"),
-        ...userBadges.map((badge) =>
-          new StringSelectMenuOptionBuilder()
-            .setLabel(badge.name)
-            .setValue(badge.id.toString()),
-        ),
-      );
+      const favoriteBadgeMenu = new StringSelectMenuBuilder()
+        .setCustomId("favorite_badge")
+        .setPlaceholder("Select your favorite badge")
+        .addOptions(
+          new StringSelectMenuOptionBuilder().setLabel("None").setValue("none"),
+          ...userBadges.map((badge) =>
+            new StringSelectMenuOptionBuilder()
+              .setLabel(badge.name)
+              .setValue(badge.id.toString()),
+          ),
+        );
 
-      displayBadgesMenu
+      const displayBadgesMenu = new StringSelectMenuBuilder()
+        .setCustomId("display_badges")
+        .setPlaceholder("Select badges to display on your card (up to 10)")
+        .setMinValues(0)
         .setMaxValues(Math.min(userBadges.length, 10))
         .addOptions(
           new StringSelectMenuOptionBuilder().setLabel("None").setValue("none"),
@@ -76,55 +79,109 @@ module.exports = {
               .setValue(badge.id.toString()),
           ),
         );
-    }
 
-    const actionRow1 = new ActionRowBuilder().addComponents(favoriteBadgeMenu);
-    const actionRow2 = new ActionRowBuilder().addComponents(displayBadgesMenu);
+      const saveButton = new ButtonBuilder()
+        .setCustomId("save")
+        .setLabel("Save")
+        .setStyle(ButtonStyle.Success);
 
-    const existingSettings = await CardSettings.findOne({
-      where: { userId: interaction.user.id },
-    });
+      const cancelButton = new ButtonBuilder()
+        .setCustomId("cancel")
+        .setLabel("Cancel")
+        .setStyle(ButtonStyle.Danger);
 
-    await interaction.reply({
-      content:
-        "Please select your favorite badge and badges to display on your card:",
-      components: userBadges.length > 0 ? [actionRow1, actionRow2] : [],
-      ephemeral: true,
-    });
+      const actionRow1 = new ActionRowBuilder().addComponents(
+        favoriteBadgeMenu,
+      );
+      const actionRow2 = new ActionRowBuilder().addComponents(
+        displayBadgesMenu,
+      );
+      const actionRow3 = new ActionRowBuilder().addComponents(
+        saveButton,
+        cancelButton,
+      );
 
-    const collector = interaction.channel.createMessageComponentCollector({
-      time: 60000,
-    });
+      await interaction.reply({
+        content:
+          "Please select your favorite badge and badges to display on your card:",
+        components: [actionRow1, actionRow2, actionRow3],
+        ephemeral: true,
+      });
 
-    let favoriteBadge = existingSettings?.favoriteBadge || null;
-    let displayBadges = existingSettings?.displayBadges || [];
+      const collector = interaction.channel.createMessageComponentCollector({
+        filter: (i) => i.user.id === interaction.user.id,
+        time: 60000,
+      });
 
-    collector.on("collect", async (i) => {
-      if (i.customId === "favorite_badge") {
-        favoriteBadge = i.values[0] === "none" ? null : parseInt(i.values[0]);
-        await i.deferUpdate();
-      }
+      let favoriteBadge = existingSettings?.favoriteBadge || null;
+      let displayBadges = existingSettings?.displayBadges || [];
 
-      if (i.customId === "display_badges") {
-        displayBadges = i.values
-          .filter((value) => value !== "none")
-          .map((badgeId) => parseInt(badgeId));
-        await i.deferUpdate();
-      }
-    });
+      collector.on("collect", async (i) => {
+        if (i.customId === "favorite_badge") {
+          favoriteBadge = i.values[0] === "none" ? null : parseInt(i.values[0]);
+          await i.deferUpdate();
+        }
 
-    collector.on("end", async () => {
+        if (i.customId === "display_badges") {
+          displayBadges = i.values
+            .filter((value) => value !== "none")
+            .map((badgeId) => parseInt(badgeId));
+          await i.deferUpdate();
+        }
+
+        if (i.customId === "save") {
+          await CardSettings.upsert({
+            userId: interaction.user.id,
+            characterName:
+              characterName || existingSettings?.characterName || "",
+            cardPhotoUrl: cardPhoto
+              ? cardPhoto.url
+              : existingSettings?.cardPhotoUrl || "",
+            favoriteBadge: favoriteBadge,
+            displayBadges: displayBadges,
+          });
+
+          await i.update({
+            content: "Card settings saved successfully!",
+            components: [],
+          });
+
+          collector.stop();
+        }
+
+        if (i.customId === "cancel") {
+          await i.update({
+            content: "Card settings update canceled.",
+            components: [],
+          });
+
+          collector.stop();
+        }
+      });
+
+      collector.on("end", async (_, reason) => {
+        if (reason === "time") {
+          await interaction.editReply({
+            content: "Card settings update timed out.",
+            components: [],
+          });
+        }
+      });
+    } else {
       await CardSettings.upsert({
         userId: interaction.user.id,
         characterName: characterName || existingSettings?.characterName || "",
         cardPhotoUrl: cardPhoto
           ? cardPhoto.url
           : existingSettings?.cardPhotoUrl || "",
-        favoriteBadge: favoriteBadge,
-        displayBadges: displayBadges,
+        favoriteBadge: null,
+        displayBadges: [],
       });
 
-      await interaction.editReply("Card settings updated successfully!");
-    });
+      await interaction.reply({
+        content: "Card settings updated successfully!",
+        ephemeral: true,
+      });
+    }
   },
 };
