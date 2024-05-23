@@ -109,7 +109,15 @@ module.exports = {
     });
 
     collector.on("end", async () => {
-      await message.edit({ components: [] });
+      try {
+        await message.edit({ components: [] });
+      } catch (error) {
+        if (error.code === 10008) {
+          console.log("Message interaction timed out.");
+        } else {
+          console.error("Error editing message:", error);
+        }
+      }
     });
   },
 };
