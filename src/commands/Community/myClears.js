@@ -82,6 +82,7 @@ module.exports = {
       embeds: [embed],
       components: [buttons],
       fetchReply: true,
+      ephemeral: true,
     });
 
     const filter = (i) => i.user.id === interaction.user.id;
