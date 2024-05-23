@@ -121,5 +121,6 @@ Badges.belongsToMany(Puzzles, {
   otherKey: "puzzleId",
   as: "puzzles",
 });
+Clears.belongsTo(Puzzles, { foreignKey: "puzzleId", targetKey: "ID" });
 
 module.exports = Puzzles;
