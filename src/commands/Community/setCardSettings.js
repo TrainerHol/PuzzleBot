@@ -5,11 +5,15 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
 } = require("discord.js");
 const CardSettings = require("../../../models/cardSettings");
 const Badges = require("../../../models/badges");
 const Puzzles = require("../../../models/puzzles");
 const Clears = require("../../../models/clears");
+require("dotenv").config();
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -53,7 +57,20 @@ module.exports = {
       where: { userId: interaction.user.id },
     });
 
-    if (userBadges.length > 0) {
+    if (cardPhoto) {
+      const badgeImageChannelId = process.env.BADGE_IMAGE_CHANNEL_ID;
+      const badgeImageChannel =
+        interaction.client.channels.cache.get(badgeImageChannelId);
+
+      const imageMessage = await badgeImageChannel.send({
+        files: [cardPhoto],
+      });
+
+      existingSettings.cardPhotoUrl = imageMessage.attachments.first().url;
+      await existingSettings.save();
+    }
+
+    if (userBadges.length < 25) {
       const favoriteBadgeMenu = new StringSelectMenuBuilder()
         .setCustomId("favorite_badge")
         .setPlaceholder("Select your favorite badge")
@@ -134,9 +151,7 @@ module.exports = {
             userId: interaction.user.id,
             characterName:
               characterName || existingSettings?.characterName || "",
-            cardPhotoUrl: cardPhoto
-              ? cardPhoto.url
-              : existingSettings?.cardPhotoUrl || "",
+            cardPhotoUrl: existingSettings?.cardPhotoUrl || "",
             favoriteBadge: favoriteBadge,
             displayBadges: displayBadges,
           });
@@ -151,7 +166,7 @@ module.exports = {
 
         if (i.customId === "cancel") {
           await i.update({
-            content: "Card settings update canceled.",
+            content: "Card settings update cancelled.",
             components: [],
           });
 
@@ -168,20 +183,81 @@ module.exports = {
         }
       });
     } else {
-      await CardSettings.upsert({
-        userId: interaction.user.id,
-        characterName: characterName || existingSettings?.characterName || "",
-        cardPhotoUrl: cardPhoto
-          ? cardPhoto.url
-          : existingSettings?.cardPhotoUrl || "",
-        favoriteBadge: null,
-        displayBadges: [],
-      });
+      const modal = new ModalBuilder()
+        .setCustomId("card_settings_modal")
+        .setTitle("Card Settings");
 
-      await interaction.reply({
-        content: "Card settings updated successfully!",
-        ephemeral: true,
-      });
+      const characterNameInput = new TextInputBuilder()
+        .setCustomId("character_name")
+        .setLabel("Character Name")
+        .setStyle(TextInputStyle.Short)
+        .setValue(existingSettings?.characterName || "");
+
+      const favoriteBadgeInput = new TextInputBuilder()
+        .setCustomId("favorite_badge")
+        .setLabel("Favorite Badge ID")
+        .setStyle(TextInputStyle.Short)
+        .setValue(existingSettings?.favoriteBadge?.toString() || "");
+
+      const displayBadgesInput = new TextInputBuilder()
+        .setCustomId("display_badges")
+        .setLabel("Display Badge IDs (comma-separated)")
+        .setStyle(TextInputStyle.Paragraph)
+        .setValue(existingSettings?.displayBadges?.join(", ") || "")
+        .setPlaceholder("Enter comma-separated badge IDs (max 8)");
+
+      modal.addComponents(
+        new ActionRowBuilder().addComponents(characterNameInput),
+        new ActionRowBuilder().addComponents(favoriteBadgeInput),
+        new ActionRowBuilder().addComponents(displayBadgesInput),
+      );
+
+      await interaction.showModal(modal);
+
+      const submitted = await interaction
+        .awaitModalSubmit({
+          filter: (i) => i.customId === "card_settings_modal",
+          time: 60000,
+        })
+        .catch((_) => null);
+
+      if (submitted) {
+        const characterName =
+          submitted.fields.getTextInputValue("character_name");
+        const favoriteBadge =
+          submitted.fields.getTextInputValue("favorite_badge");
+        const displayBadgesInput =
+          submitted.fields.getTextInputValue("display_badges");
+
+        const displayBadges = displayBadgesInput
+          .split(",")
+          .map((id) => parseInt(id.trim()))
+          .filter((id) => !isNaN(id));
+
+        await CardSettings.upsert({
+          userId: interaction.user.id,
+          characterName: characterName,
+          cardPhotoUrl: existingSettings?.cardPhotoUrl || "",
+          favoriteBadge: favoriteBadge ? parseInt(favoriteBadge) : null,
+          displayBadges: displayBadges.slice(0, 8),
+        });
+
+        await submitted.reply({
+          content: "Card settings updated successfully!",
+          ephemeral: true,
+        });
+      } else {
+        try {
+          await interaction.reply({
+            content: "Card settings update cancelled.",
+            ephemeral: true,
+          });
+        } catch (error) {
+          if (error.code !== "InteractionAlreadyReplied") {
+            console.error("Error replying to interaction:", error);
+          }
+        }
+      }
     }
   },
 };
