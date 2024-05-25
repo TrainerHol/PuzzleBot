@@ -4,6 +4,7 @@ const Badges = require("../../../models/badges");
 const Puzzles = require("../../../models/puzzles");
 const BadgePuzzles = require("../../../models/badgePuzzles");
 const { Op } = require("sequelize");
+require("dotenv").config();
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -70,11 +71,19 @@ module.exports = {
         return;
       }
 
+      const badgeImageChannelId = process.env.BADGE_IMAGE_CHANNEL_ID;
+      const badgeImageChannel =
+        interaction.client.channels.cache.get(badgeImageChannelId);
+
+      const imageMessage = await badgeImageChannel.send({
+        files: [imageAttachment],
+      });
+
       const badge = await Badges.create({
         name: name,
         title: title,
         description: description,
-        imageUrl: imageAttachment.url,
+        imageUrl: imageMessage.attachments.first().url,
       });
 
       const badgePuzzleData = cleanedPuzzleIds.map((puzzleId) => ({
