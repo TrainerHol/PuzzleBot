@@ -1,11 +1,23 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const { AttachmentBuilder } = require("discord.js");
-const { createCanvas, loadImage } = require("canvas");
+const { createCanvas, loadImage, registerFont } = require("canvas");
+const path = require("path");
 const Clears = require("../../../models/clears");
 const Puzzles = require("../../../models/puzzles");
 const CardSettings = require("../../../models/cardSettings");
 const Badges = require("../../../models/badges");
 const { Op } = require("sequelize");
+
+async function loadImageWithFallback(url, fallbackImage) {
+  try {
+    const image = await loadImage(url);
+    //console.log(`Successfully loaded image: ${url}`);
+    return image;
+  } catch (error) {
+    console.error(`Failed to load image: ${url}. Using fallback image.`);
+    return fallbackImage;
+  }
+}
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -32,31 +44,45 @@ module.exports = {
     const characterName =
       cardSettings?.characterName || member.displayName || user.tag;
 
-    const canvas = createCanvas(800, 600);
+    const canvas = createCanvas(953, 624);
     const ctx = canvas.getContext("2d");
 
-    ctx.fillStyle = "red";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Register fonts
+    registerFont(path.join(__dirname, "../../../src/fonts/font1.otf"), {
+      family: "Jupiter Pro",
+    });
+    registerFont(path.join(__dirname, "../../../src/fonts/font2.ttf"), {
+      family: "Miedinger",
+    });
+    registerFont(path.join(__dirname, "../../../src/fonts/font3.ttf"), {
+      family: "OpenSans",
+    });
 
-    const radius = 80;
-    const x = canvas.width / 2;
-    const y = radius + 10;
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2, true);
-    ctx.closePath();
-    ctx.save();
-    ctx.clip();
+    // Load images
+    const template = await loadImage(
+      path.join(__dirname, "../../../src/img/Template.png"),
+    );
+    const expBarFill = await loadImage(
+      path.join(__dirname, "../../../src/img/ExpBarFill.png"),
+    );
+    const blankImage = await loadImage(
+      path.join(__dirname, "../../../src/img/blank.png"),
+    );
+    const avatar = await loadImageWithFallback(avatarURL, blankImage);
 
-    const avatar = await loadImage(avatarURL);
-    ctx.drawImage(avatar, x - radius, y - radius, radius * 2, radius * 2);
-    ctx.restore();
+    // Draw template
+    ctx.drawImage(template, 0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = "white";
-    ctx.font = "24px Arial";
-    ctx.textAlign = "right";
-    ctx.fillText(characterName, canvas.width - 10, 30);
-    ctx.font = "18px Arial";
-    ctx.fillText(`ID: ${user.id}`, canvas.width - 10, 60);
+    // Draw avatar
+    ctx.drawImage(avatar, 24, 78, 128, 128);
+
+    // Draw character name
+    let padding = 100;
+    ctx.font = '22px "Jupiter Pro"';
+    ctx.fillStyle = "rgb(118, 92, 73)";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillText(characterName, 186.847 + padding, 96.3);
 
     // Retrieve the favorite badge and display badges from card settings
     const favoriteBadgeId = cardSettings?.favoriteBadge;
@@ -66,37 +92,77 @@ module.exports = {
     const [favoriteBadge, displayBadges] = await Promise.all([
       favoriteBadgeId ? Badges.findByPk(favoriteBadgeId) : null,
       displayBadgeIds.length > 0
-        ? Badges.findAll({ where: { id: displayBadgeIds } })
+        ? Badges.findAll({ where: { id: displayBadgeIds }, limit: 8 })
         : [],
     ]);
 
-    // Display the favorite badge title, image, name, and description
+    // Draw favorite badge
     if (favoriteBadge) {
-      ctx.font = "18px Arial";
-      ctx.textAlign = "left";
-      ctx.fillText(favoriteBadge.title, 20, 90);
+      const favBadgeImage = await loadImageWithFallback(
+        favoriteBadge.imageUrl,
+        blankImage,
+      );
+      ctx.drawImage(favBadgeImage, 269, 292, 141, 135);
 
-      const favoriteBadgeImage = await loadImage(favoriteBadge.imageUrl);
-      ctx.drawImage(favoriteBadgeImage, 20, 100, 50, 50);
+      ctx.font = '22px "OpenSans"';
+      ctx.fillStyle = "rgb(118, 92, 73)";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.fillText(`«${favoriteBadge.title}»`, 190 + padding, 129.44);
 
-      ctx.font = "14px Arial";
-      ctx.fillText(favoriteBadge.name, 80, 120);
-      ctx.fillText(favoriteBadge.description, 80, 140);
+      ctx.font = '16px "OpenSans"';
+      ctx.fillStyle = "rgb(106, 76, 58)";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.fillText(favoriteBadge.name, 340, 434.258);
     }
 
-    // Display the list of display badges
-    if (displayBadges.length > 0) {
-      ctx.font = "14px Arial";
-      ctx.textAlign = "right";
-      ctx.fillText("Display Badges:", canvas.width - 20, 100);
+    // Draw display badges
+    const badgePositions = [
+      { x: 572, y: 99 },
+      { x: 768, y: 99 },
+      { x: 573, y: 208 },
+      { x: 769, y: 208 },
+      { x: 572, y: 318 },
+      { x: 768, y: 318 },
+      { x: 572, y: 426 },
+      { x: 768, y: 426 },
+    ];
 
-      let badgeY = 120;
-      for (const badge of displayBadges) {
-        const badgeImage = await loadImage(badge.imageUrl);
-        ctx.drawImage(badgeImage, canvas.width - 70, badgeY, 50, 50);
-        ctx.fillText(badge.name, canvas.width - 80, badgeY + 25);
-        badgeY += 60;
-      }
+    const badgeTextPositions = [
+      { x: 611, y: 179.78 },
+      { x: 806.5, y: 179.78 },
+      { x: 612, y: 288.78 },
+      { x: 807.5, y: 288.78 },
+      { x: 611, y: 397.78 },
+      { x: 806.5, y: 397.78 },
+      { x: 611, y: 505.78 },
+      { x: 806.5, y: 505.78 },
+    ];
+
+    for (let i = 0; i < displayBadges.length; i++) {
+      const badge = displayBadges[i];
+      const badgeImage = await loadImageWithFallback(
+        badge.imageUrl,
+        blankImage,
+      );
+      ctx.drawImage(
+        badgeImage,
+        badgePositions[i].x,
+        badgePositions[i].y,
+        78,
+        78,
+      );
+
+      ctx.font = '14px "OpenSans"';
+      ctx.fillStyle = "rgb(106, 76, 58)";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.fillText(
+        badge.name,
+        badgeTextPositions[i].x,
+        badgeTextPositions[i].y,
+      );
     }
 
     // Retrieve the puzzle IDs cleared by the user
@@ -129,15 +195,19 @@ module.exports = {
       }
     });
 
-    // Display the star counts on the card
+    // Draw star counts
+    let starPadding = 15;
+    ctx.font = '22px "Miedinger"';
+    ctx.fillStyle = "rgb(155, 129, 115)";
     ctx.textAlign = "left";
-    ctx.fillText("5-stars cleared: " + starCounts["5"], 20, 200);
-    ctx.fillText("4-stars cleared: " + starCounts["4"], 20, 225);
-    ctx.fillText("3-stars cleared: " + starCounts["3"], 20, 250);
-    ctx.fillText("2-stars cleared: " + starCounts["2"], 20, 275);
-    ctx.fillText("1-stars cleared: " + starCounts["1"], 20, 300);
+    ctx.textBaseline = "middle";
+    ctx.fillText(starCounts["5"], 159.094, 274.8 + starPadding);
+    ctx.fillText(starCounts["4"], 159.094, 317.8 + starPadding);
+    ctx.fillText(starCounts["3"], 158.094, 359.8 + starPadding);
+    ctx.fillText(starCounts["2"], 158.094, 400.8 + starPadding);
+    ctx.fillText(starCounts["1"], 158.094, 442.8 + starPadding);
 
-    // Calculate and display the global percentage
+    // Calculate global percentage
     const totalClears = Object.values(starCounts).reduce(
       (sum, count) => sum + count,
       0,
@@ -146,7 +216,10 @@ module.exports = {
       where: { Rating: { [Op.ne]: "" } },
     });
     const globalPercentage = ((totalClears / totalPuzzles) * 100).toFixed(2);
-    ctx.fillText(`Global Percentage: ${globalPercentage}%`, 20, 325);
+
+    // Draw exp bar fill
+    const expBarWidth = (globalPercentage / 100) * 419;
+    ctx.drawImage(expBarFill, 26, 516, expBarWidth, 28);
 
     const attachment = new AttachmentBuilder(canvas.toBuffer(), {
       name: "user-card.png",

@@ -68,9 +68,9 @@ module.exports = {
 
       const displayBadgesMenu = new StringSelectMenuBuilder()
         .setCustomId("display_badges")
-        .setPlaceholder("Select badges to display on your card (up to 10)")
+        .setPlaceholder("Select badges to display on your card (up to 8)")
         .setMinValues(0)
-        .setMaxValues(Math.min(userBadges.length, 10))
+        .setMaxValues(Math.min(userBadges.length, 8))
         .addOptions(
           new StringSelectMenuOptionBuilder().setLabel("None").setValue("none"),
           ...userBadges.map((badge) =>
