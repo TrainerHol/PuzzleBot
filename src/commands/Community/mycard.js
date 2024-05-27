@@ -7,11 +7,15 @@ const Puzzles = require("../../../models/puzzles");
 const CardSettings = require("../../../models/cardSettings");
 const Badges = require("../../../models/badges");
 const { Op } = require("sequelize");
+require("dotenv").config();
+
+const cdn = process.env.DISCORD_CDN;
 
 async function loadImageWithFallback(url, fallbackImage) {
   try {
-    const image = await loadImage(url);
-    //console.log(`Successfully loaded image: ${url}`);
+    const proxyUrl = `${cdn}${url}`;
+    const image = await loadImage(proxyUrl);
+    //console.log(`Successfully loaded image: ${proxyUrl}`);
     return image;
   } catch (error) {
     console.error(`Failed to load image: ${url}. Using fallback image.`);
@@ -30,6 +34,11 @@ module.exports = {
         .setRequired(false),
     ),
   async execute(interaction) {
+    await interaction.reply({
+      content: "Generating your card...",
+      ephemeral: true,
+    });
+
     const user = interaction.options.getUser("user") || interaction.user;
     const member = await interaction.guild.members.fetch(user.id);
 
@@ -68,21 +77,6 @@ module.exports = {
     const blankImage = await loadImage(
       path.join(__dirname, "../../../src/img/blank.png"),
     );
-    const avatar = await loadImageWithFallback(avatarURL, blankImage);
-
-    // Draw template
-    ctx.drawImage(template, 0, 0, canvas.width, canvas.height);
-
-    // Draw avatar
-    ctx.drawImage(avatar, 24, 78, 128, 128);
-
-    // Draw character name
-    let padding = 100;
-    ctx.font = '22px "Jupiter Pro"';
-    ctx.fillStyle = "rgb(118, 92, 73)";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-    ctx.fillText(characterName, 186.847 + padding, 96.3);
 
     // Retrieve the favorite badge and display badges from card settings
     const favoriteBadgeId = cardSettings?.favoriteBadge;
@@ -95,6 +89,21 @@ module.exports = {
         ? Badges.findAll({ where: { id: displayBadgeIds }, limit: 8 })
         : [],
     ]);
+
+    // Draw template
+    ctx.drawImage(template, 0, 0, canvas.width, canvas.height);
+
+    // Draw avatar
+    const avatar = await loadImageWithFallback(avatarURL, blankImage);
+    ctx.drawImage(avatar, 24, 78, 128, 128);
+
+    // Draw character name
+    let padding = 100;
+    ctx.font = '22px "Jupiter Pro"';
+    ctx.fillStyle = "rgb(118, 92, 73)";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillText(characterName, 186.847 + padding, 96.3);
 
     // Draw favorite badge
     if (favoriteBadge) {
@@ -225,6 +234,10 @@ module.exports = {
       name: "user-card.png",
     });
 
-    await interaction.reply({ files: [attachment], ephemeral: false });
+    await interaction.editReply({
+      content: "",
+      files: [attachment],
+      ephemeral: false,
+    });
   },
 };
