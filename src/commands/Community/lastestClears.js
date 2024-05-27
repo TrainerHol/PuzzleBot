@@ -45,7 +45,9 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setTitle(`Latest Clears for ${puzzle.PuzzleName} by ${puzzle.Builder}:`)
-      .setDescription(clearsList.join("\n"))
+      .setDescription(
+        clearsList.length > 0 ? clearsList.join("\n") : "No clears yet!",
+      )
       .setColor("#0099ff")
       .setTimestamp();
 
