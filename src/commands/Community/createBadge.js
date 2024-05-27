@@ -51,7 +51,7 @@ module.exports = {
 
     const cleanedPuzzleIds = puzzleIds
       .replace(/,/g, " ")
-      .split(" ")
+      .split(/\s+/) // Split by any number of spaces
       .map((id) => id.trim().padStart(5, "0"))
       .filter((id) => id.length === 5);
 
@@ -68,6 +68,7 @@ module.exports = {
         await interaction.reply(
           "One or more provided puzzle IDs do not exist. Please check the puzzle IDs and try again.",
         );
+        console.log(existingPuzzles.length, cleanedPuzzleIds.length);
         return;
       }
 
