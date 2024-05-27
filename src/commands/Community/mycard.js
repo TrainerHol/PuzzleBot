@@ -222,7 +222,10 @@ module.exports = {
       0,
     );
     const totalPuzzles = await Puzzles.count({
-      where: { Rating: { [Op.ne]: "" } },
+      where: {
+        Rating: { [Op.ne]: "" },
+        Status: "Active",
+      },
     });
     const globalPercentage = ((totalClears / totalPuzzles) * 100).toFixed(2);
 
