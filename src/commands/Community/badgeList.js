@@ -43,7 +43,10 @@ module.exports = {
 
       const badgeList = badgesOnPage
         .map((badge) => {
-          const puzzleIds = badge.puzzles.map((puzzle) => puzzle.ID).join(", ");
+          const puzzlelist = badge.puzzles.map((puzzle) => puzzle.ID);
+          const puzzleIds =
+            puzzlelist.slice(0, 15).join(", ") +
+            (puzzlelist.length > 15 ? ", [...]" : "");
           return `#${badge.id} ${badge.name} << ${badge.title} >>\n**Description:** ${badge.description}\n**Required Puzzle IDs:** ${puzzleIds}\n`;
         })
         .join("\n");
