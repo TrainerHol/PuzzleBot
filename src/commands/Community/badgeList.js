@@ -8,7 +8,7 @@ const {
 const Badges = require("../../../models/badges");
 const Puzzles = require("../../../models/puzzles");
 
-const BADGES_PER_PAGE = 5;
+const BADGES_PER_PAGE = 15;
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -44,7 +44,7 @@ module.exports = {
       const badgeList = badgesOnPage
         .map((badge) => {
           const puzzleIds = badge.puzzles.map((puzzle) => puzzle.ID).join(", ");
-          return `- ${badge.id} ${badge.name} << ${badge.title} >>\n**Description:** ${badge.description}\n**Required Puzzle IDs:** ${puzzleIds}\n`;
+          return `#${badge.id} ${badge.name} << ${badge.title} >>\n**Description:** ${badge.description}\n**Required Puzzle IDs:** ${puzzleIds}\n`;
         })
         .join("\n");
 
@@ -72,14 +72,14 @@ module.exports = {
     const embed = generateEmbed(currentPage);
     const buttons = generateButtons(currentPage);
 
-    const message = await interaction.reply({
+    await interaction.reply({
       embeds: [embed],
       components: [buttons],
-      fetchReply: true,
+      ephemeral: true,
     });
 
     const filter = (i) => i.user.id === interaction.user.id;
-    const collector = message.createMessageComponentCollector({
+    const collector = interaction.channel.createMessageComponentCollector({
       filter,
       time: 60000,
     });
@@ -98,7 +98,7 @@ module.exports = {
     });
 
     collector.on("end", async () => {
-      await message.edit({ components: [] });
+      await interaction.editReply({ components: [] });
     });
   },
 };
