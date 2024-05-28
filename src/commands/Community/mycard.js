@@ -11,11 +11,10 @@ require("dotenv").config();
 
 const cdn = process.env.DISCORD_CDN;
 
-async function loadImageWithFallback(url, fallbackImage) {
+async function loadImageWithFallback(url, fallbackImage, useCDN = false) {
   try {
-    const proxyUrl = `${cdn}${url}`;
-    const image = await loadImage(proxyUrl);
-    //console.log(`Successfully loaded image: ${proxyUrl}`);
+    const imageUrl = useCDN ? `${cdn}${url}` : url;
+    const image = await loadImage(imageUrl);
     return image;
   } catch (error) {
     console.error(`Failed to load image: ${url}. Using fallback image.`);
@@ -78,6 +77,13 @@ module.exports = {
       path.join(__dirname, "../../../src/img/blank.png"),
     );
 
+    // Calculate the pseudorandom image index based on the user's ID
+    const userIdNumber = parseInt(user.id);
+    const stampIndex = (userIdNumber % 24) + 1;
+    const stampImage = await loadImage(
+      path.join(__dirname, `../../../src/img/stamp${stampIndex}.png`),
+    );
+
     // Retrieve the favorite badge and display badges from card settings
     const favoriteBadgeId = cardSettings?.favoriteBadge;
     const displayBadgeIds = cardSettings?.displayBadges || [];
@@ -93,8 +99,22 @@ module.exports = {
     // Draw template
     ctx.drawImage(template, 0, 0, canvas.width, canvas.height);
 
+    // Draw stamp image on the bottom left and bottom right with modified hue and opacity
+    ctx.globalCompositeOperation = "multiply";
+    ctx.filter = "hue-rotate(-30deg)";
+    ctx.globalAlpha = 0.75;
+    ctx.drawImage(stampImage, 0, 5, 64, 64);
+    ctx.drawImage(stampImage, canvas.width - 64, 5, 64, 64);
+    ctx.filter = "none";
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = "source-over";
+
     // Draw avatar
-    const avatar = await loadImageWithFallback(avatarURL, blankImage);
+    const avatar = await loadImageWithFallback(
+      avatarURL,
+      blankImage,
+      cardSettings?.cardPhotoUrl,
+    );
     ctx.drawImage(avatar, 24, 78, 128, 128);
 
     // Draw character name
@@ -110,6 +130,7 @@ module.exports = {
       const favBadgeImage = await loadImageWithFallback(
         favoriteBadge.imageUrl,
         blankImage,
+        true,
       );
       ctx.drawImage(favBadgeImage, 269, 292, 141, 135);
 
@@ -154,6 +175,7 @@ module.exports = {
       const badgeImage = await loadImageWithFallback(
         badge.imageUrl,
         blankImage,
+        true,
       );
       ctx.drawImage(
         badgeImage,
