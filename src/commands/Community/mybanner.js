@@ -7,6 +7,20 @@ const Puzzles = require("../../../models/puzzles");
 const CardSettings = require("../../../models/cardSettings");
 const Badges = require("../../../models/badges");
 const { Op } = require("sequelize");
+require("dotenv").config();
+
+const cdn = process.env.DISCORD_CDN;
+
+async function loadImageWithFallback(url, fallbackImage, useCDN = false) {
+  try {
+    const imageUrl = useCDN ? `${cdn}${url}` : url;
+    const image = await loadImage(imageUrl);
+    return image;
+  } catch (error) {
+    console.error(`Failed to load image: ${url}. Using fallback image.`);
+    return fallbackImage;
+  }
+}
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -46,6 +60,9 @@ module.exports = {
     const template = await loadImage(
       path.join(__dirname, "../../../src/img/BannerTemplate.png"),
     );
+    const blankImage = await loadImage(
+      path.join(__dirname, "../../../src/img/blank.png"),
+    );
 
     // Calculate the pseudorandom image index based on the user's ID
     const userIdNumber = parseInt(user.id);
@@ -62,15 +79,22 @@ module.exports = {
     ctx.drawImage(template, 0, 0, canvas.width, canvas.height);
 
     // Draw stamp image
-    ctx.drawImage(stampImage, 553, 5, 100, 100);
+    ctx.drawImage(stampImage, canvas.width - 64, canvas.height - 80, 64, 64);
 
     // Draw character name
     ctx.font = '24px "Miedinger"';
     ctx.fillStyle = "rgb(255, 255, 255)";
-    ctx.fillText(characterName, 187.281, 21.1 + 24);
+    ctx.fillText(characterName, 187.281 + 10, 21.1 + 24);
 
-    // Draw favorite badge title
+    // Draw favorite badge
     if (favoriteBadge) {
+      const favBadgeImage = await loadImageWithFallback(
+        favoriteBadge.imageUrl,
+        blankImage,
+        true,
+      );
+      ctx.drawImage(favBadgeImage, canvas.width - 110, 15, 100, 100);
+
       ctx.font = '16px "Miedinger"';
       ctx.fillStyle = "rgb(255, 255, 255)";
       ctx.fillText(`<< ${favoriteBadge.title} >>`, 187.594, 56.9 + 16);
