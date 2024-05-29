@@ -9,6 +9,7 @@ require("dotenv").config();
 module.exports = {
   data: new SlashCommandBuilder()
     .setDMPermission(false)
+    .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
     .setName("editbadge")
     .setDescription("Edit an existing badge")
     .addIntegerOption((option) =>
