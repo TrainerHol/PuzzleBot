@@ -213,11 +213,11 @@ module.exports = {
     });
 
     const starCounts = {
-      1: 0,
-      2: 0,
-      3: 0,
-      4: 0,
       5: 0,
+      4: 0,
+      3: 0,
+      2: 0,
+      1: 0,
     };
 
     clearedPuzzles.forEach((puzzle) => {
@@ -233,11 +233,11 @@ module.exports = {
     ctx.fillStyle = "rgb(155, 129, 115)";
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
-    ctx.fillText(starCounts["5"], 159.094, 274.8 + starPadding);
-    ctx.fillText(starCounts["4"], 159.094, 317.8 + starPadding);
+    ctx.fillText(starCounts["1"], 159.094, 274.8 + starPadding);
+    ctx.fillText(starCounts["2"], 159.094, 317.8 + starPadding);
     ctx.fillText(starCounts["3"], 158.094, 359.8 + starPadding);
-    ctx.fillText(starCounts["2"], 158.094, 400.8 + starPadding);
-    ctx.fillText(starCounts["1"], 158.094, 442.8 + starPadding);
+    ctx.fillText(starCounts["4"], 158.094, 400.8 + starPadding);
+    ctx.fillText(starCounts["5"], 158.094, 442.8 + starPadding);
 
     // Calculate global percentage
     const totalClears = Object.values(starCounts).reduce(
