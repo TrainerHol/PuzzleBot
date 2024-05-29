@@ -1,14 +1,11 @@
-const {
-  SlashCommandBuilder,
-  PermissionFlagsBits,
-} = require("@discordjs/builders");
-const { EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder } = require("@discordjs/builders");
+const { EmbedBuilder, PermissionsBitField } = require("discord.js");
 const Badges = require("../../../models/badges");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setDMPermission(false)
-    .setDefaultMemberPermissions(PermissionFlagsBits.Flags.BanMembers)
+    .setDefaultMemberPermissions(PermissionsBitField.Flags.BanMembers)
     .setName("deletebadge")
     .setDescription("Delete a badge")
     .addIntegerOption((option) =>

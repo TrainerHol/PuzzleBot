@@ -1,8 +1,9 @@
+const { SlashCommandBuilder } = require("@discordjs/builders");
 const {
-  SlashCommandBuilder,
-  PermissionFlagsBits,
-} = require("@discordjs/builders");
-const { EmbedBuilder, AttachmentBuilder } = require("discord.js");
+  EmbedBuilder,
+  AttachmentBuilder,
+  PermissionsBitField,
+} = require("discord.js");
 const Badges = require("../../../models/badges");
 const Puzzles = require("../../../models/puzzles");
 const BadgePuzzles = require("../../../models/badgePuzzles");
@@ -12,7 +13,7 @@ require("dotenv").config();
 module.exports = {
   data: new SlashCommandBuilder()
     .setDMPermission(false)
-    .setDefaultMemberPermissions(PermissionFlagsBits.Flags.BanMembers)
+    .setDefaultMemberPermissions(PermissionsBitField.Flags.BanMembers)
     .setName("createbadge")
     .setDescription("Create a new badge")
     .addStringOption((option) =>
