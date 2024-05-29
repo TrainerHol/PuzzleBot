@@ -8,7 +8,7 @@ const Badges = require("../../../models/badges");
 module.exports = {
   data: new SlashCommandBuilder()
     .setDMPermission(false)
-    .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
+    .setDefaultMemberPermissions(PermissionFlagsBits.Flags.BanMembers)
     .setName("deletebadge")
     .setDescription("Delete a badge")
     .addIntegerOption((option) =>
