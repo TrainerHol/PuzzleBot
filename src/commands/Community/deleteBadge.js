@@ -1,4 +1,7 @@
-const { SlashCommandBuilder } = require("@discordjs/builders");
+const {
+  SlashCommandBuilder,
+  PermissionFlagsBits,
+} = require("@discordjs/builders");
 const { EmbedBuilder } = require("discord.js");
 const Badges = require("../../../models/badges");
 
