@@ -54,9 +54,19 @@ module.exports = {
       ],
     });
 
-    const existingSettings = await CardSettings.findOne({
+    let existingSettings = await CardSettings.findOne({
       where: { userId: interaction.user.id },
     });
+
+    if (!existingSettings) {
+      existingSettings = new CardSettings({
+        userId: interaction.user.id,
+        characterName: "",
+        cardPhotoUrl: "",
+        favoriteBadge: null,
+        displayBadges: [],
+      });
+    }
 
     if (cardPhoto) {
       const badgeImageChannelId = process.env.BADGE_IMAGE_CHANNEL_ID;
@@ -71,7 +81,7 @@ module.exports = {
       await existingSettings.save();
     }
 
-    if (userBadges.length < 25) {
+    if (userBadges.length >= 1 && userBadges.length < 25) {
       const favoriteBadgeMenu = new StringSelectMenuBuilder()
         .setCustomId("favorite_badge")
         .setPlaceholder("Select your favorite badge")
@@ -150,8 +160,7 @@ module.exports = {
         if (i.customId === "save") {
           await CardSettings.upsert({
             userId: interaction.user.id,
-            characterName:
-              characterName || existingSettings?.characterName || "",
+            characterName: characterName || existingSettings.characterName,
             cardPhotoUrl: existingSettings?.cardPhotoUrl || "",
             favoriteBadge: favoriteBadge,
             displayBadges: displayBadges,
@@ -183,16 +192,10 @@ module.exports = {
           });
         }
       });
-    } else {
+    } else if (userBadges.length >= 25) {
       const modal = new ModalBuilder()
         .setCustomId("card_settings_modal")
         .setTitle("Card Settings");
-
-      const characterNameInput = new TextInputBuilder()
-        .setCustomId("character_name")
-        .setLabel("Character Name")
-        .setStyle(TextInputStyle.Short)
-        .setValue(existingSettings?.characterName || "");
 
       const favoriteBadgeInput = new TextInputBuilder()
         .setCustomId("favorite_badge")
@@ -208,7 +211,6 @@ module.exports = {
         .setPlaceholder("Enter comma-separated badge IDs (max 8)");
 
       modal.addComponents(
-        new ActionRowBuilder().addComponents(characterNameInput),
         new ActionRowBuilder().addComponents(favoriteBadgeInput),
         new ActionRowBuilder().addComponents(displayBadgesInput),
       );
@@ -223,8 +225,6 @@ module.exports = {
         .catch((_) => null);
 
       if (submitted) {
-        const characterName =
-          submitted.fields.getTextInputValue("character_name");
         const favoriteBadge =
           submitted.fields.getTextInputValue("favorite_badge");
         const displayBadgesInput =
@@ -237,7 +237,7 @@ module.exports = {
 
         await CardSettings.upsert({
           userId: interaction.user.id,
-          characterName: characterName,
+          characterName: characterName || existingSettings.characterName,
           cardPhotoUrl: existingSettings?.cardPhotoUrl || "",
           favoriteBadge: favoriteBadge ? parseInt(favoriteBadge) : null,
           displayBadges: displayBadges.slice(0, 8),
@@ -259,6 +259,20 @@ module.exports = {
           }
         }
       }
+    } else {
+      // User has 0 or 1 badge, just save the name and photo
+      await CardSettings.upsert({
+        userId: interaction.user.id,
+        characterName: characterName || existingSettings.characterName,
+        cardPhotoUrl: existingSettings?.cardPhotoUrl || "",
+        favoriteBadge: null,
+        displayBadges: [],
+      });
+
+      await interaction.reply({
+        content: "Card settings updated successfully!",
+        ephemeral: true,
+      });
     }
   },
 };
