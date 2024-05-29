@@ -18,6 +18,7 @@ async function loadImageWithFallback(url, fallbackImage, useCDN = false) {
     return image;
   } catch (error) {
     console.error(`Failed to load image: ${url}. Using fallback image.`);
+    console.log(error);
     return fallbackImage;
   }
 }
