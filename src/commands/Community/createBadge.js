@@ -8,6 +8,7 @@ require("dotenv").config();
 
 module.exports = {
   data: new SlashCommandBuilder()
+    .setDMPermission(false)
     .setName("createbadge")
     .setDescription("Create a new badge")
     .addStringOption((option) =>

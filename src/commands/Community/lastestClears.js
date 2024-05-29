@@ -5,6 +5,7 @@ const { Op } = require("sequelize");
 
 module.exports = {
   data: new SlashCommandBuilder()
+    .setDMPermission(false)
     .setName("latestclears")
     .setDescription("Shows the most recent 10 clears of a puzzle")
     .addStringOption((option) =>

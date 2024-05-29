@@ -3,6 +3,7 @@ const Clears = require("../../../models/clears");
 
 module.exports = {
   data: new SlashCommandBuilder()
+    .setDMPermission(false)
     .setName("removeclear")
     .setDescription("Removes the clear for the specified puzzle ID by the user")
     .addStringOption((option) =>

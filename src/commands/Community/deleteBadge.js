@@ -4,6 +4,7 @@ const Badges = require("../../../models/badges");
 
 module.exports = {
   data: new SlashCommandBuilder()
+    .setDMPermission(false)
     .setName("deletebadge")
     .setDescription("Delete a badge")
     .addIntegerOption((option) =>

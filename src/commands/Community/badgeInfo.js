@@ -13,6 +13,7 @@ const PUZZLES_PER_PAGE = 10;
 
 module.exports = {
   data: new SlashCommandBuilder()
+    .setDMPermission(false)
     .setName("badgeinfo")
     .setDescription("Get information about a badge")
     .addStringOption((option) =>

@@ -35,7 +35,7 @@ module.exports = {
   async execute(interaction) {
     await interaction.reply({
       content: "Generating your banner...",
-      ephemeral: true,
+      ephemeral: false,
     });
 
     const user = interaction.options.getUser("user") || interaction.user;

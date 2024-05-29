@@ -50,7 +50,7 @@ async function downloadPuzzles() {
 (async () => {
   try {
     // Download puzzles at startup
-    //await downloadPuzzles();
+    await downloadPuzzles();
 
     // Schedule the puzzle download every 12 hours
     cron.schedule("0 */12 * * *", downloadPuzzles);

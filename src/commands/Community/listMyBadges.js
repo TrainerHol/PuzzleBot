@@ -5,6 +5,7 @@ const Clears = require("../../../models/clears");
 
 module.exports = {
   data: new SlashCommandBuilder()
+    .setDMPermission(false)
     .setName("mybadges")
     .setDescription("List all the badges you currently have"),
   async execute(interaction) {

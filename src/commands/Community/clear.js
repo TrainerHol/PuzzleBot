@@ -5,6 +5,7 @@ const Puzzles = require("../../../models/puzzles");
 
 module.exports = {
   data: new SlashCommandBuilder()
+    .setDMPermission(false)
     .setName("clear")
     .setDescription("Record a clear for a puzzle")
     .addStringOption((option) =>

@@ -12,6 +12,7 @@ const CLEARS_PER_PAGE = 10;
 
 module.exports = {
   data: new SlashCommandBuilder()
+    .setDMPermission(false)
     .setName("myclears")
     .setDescription("Lists all clears by the user (default) or specified user")
     .addUserOption((option) =>

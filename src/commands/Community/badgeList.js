@@ -12,6 +12,7 @@ const BADGES_PER_PAGE = 15;
 
 module.exports = {
   data: new SlashCommandBuilder()
+    .setDMPermission(false)
     .setName("badgelist")
     .setDescription("Lists all the badges with their details"),
   async execute(interaction) {

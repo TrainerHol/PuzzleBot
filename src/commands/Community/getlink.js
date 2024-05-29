@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require("@discordjs/builders");
 
 module.exports = {
   data: new SlashCommandBuilder()
+    .setDMPermission(false)
     .setName("getlink")
     .setDescription("Get the link to the puzzle submission form"),
   async execute(interaction, client) {

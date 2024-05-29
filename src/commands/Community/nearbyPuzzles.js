@@ -12,6 +12,7 @@ const PUZZLES_PER_PAGE = 10;
 
 module.exports = {
   data: new SlashCommandBuilder()
+    .setDMPermission(false)
     .setName("nearbypuzzles")
     .setDescription(
       "Shows the list of puzzles given world/ward/server or puzzle ID",

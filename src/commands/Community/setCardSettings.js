@@ -17,6 +17,7 @@ require("dotenv").config();
 
 module.exports = {
   data: new SlashCommandBuilder()
+    .setDMPermission(false)
     .setName("setcardsettings")
     .setDescription("Set your card settings")
     .addStringOption((option) =>

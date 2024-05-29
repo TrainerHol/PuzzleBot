@@ -36,7 +36,7 @@ module.exports = {
   async execute(interaction) {
     await interaction.reply({
       content: "Generating your card...",
-      ephemeral: true,
+      ephemeral: false,
     });
 
     const user = interaction.options.getUser("user") || interaction.user;

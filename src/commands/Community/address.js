@@ -5,6 +5,7 @@ const Puzzles = require("../../../models/puzzles");
 
 module.exports = {
   data: new SlashCommandBuilder()
+    .setDMPermission(false)
     .setName("address")
     .setDescription("Search for a puzzle by name or builder")
     .addStringOption((option) =>
