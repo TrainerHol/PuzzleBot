@@ -24,6 +24,7 @@ module.exports = {
       .filter((id) => id.trim() !== "");
 
     let replyMessages = [];
+    let clearedPuzzles = 0;
 
     for (let puzzleId of puzzleIds) {
       // Pad the puzzle ID with leading zeros to a length of 5
@@ -45,9 +46,12 @@ module.exports = {
         });
 
         const puzzleName = puzzle.PuzzleName;
-        replyMessages.push(
-          `✅Your clear of **${puzzleName}** has been recorded.`,
-        );
+        if (clearedPuzzles < 25) {
+          replyMessages.push(
+            `✅Your clear of **${puzzleName}** has been recorded.`,
+          );
+        }
+        clearedPuzzles++;
       } catch (error) {
         console.error(
           "❌Error recording clear for puzzle ID " + puzzleId + ":",
@@ -59,6 +63,12 @@ module.exports = {
             ". Please try again later.",
         );
       }
+    }
+
+    // Summarize the message if there are more than 25 puzzles
+    if (clearedPuzzles > 25) {
+      const remainingPuzzles = clearedPuzzles - 25;
+      replyMessages.push(`...and ${remainingPuzzles} other puzzles.`);
     }
 
     // Combine all messages into a single reply
