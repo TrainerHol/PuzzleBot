@@ -20,6 +20,7 @@ const client = new Client({
 const cron = require("node-cron");
 const { downloadAndInsertPuzzles } = require("./downloadpuzzles");
 const sequelize = require("../utils/database");
+const { syncSheet } = require("./syncSheet");
 
 client.commands = new Collection();
 require("dotenv").config();
@@ -96,6 +97,9 @@ client.once("ready", () => {
     cron.schedule("0 */12 * * *", downloadPuzzles);
     // Schedule the puzzle download every 3 minutes for testing
     // cron.schedule("*/3 * * * *", downloadPuzzles);
+
+    // Schedule the syncSheet function every 24 hours
+    cron.schedule("0 0 */24 * * *", syncSheet);
 
     for (const file of functions) {
       require(`./functions/${file}`)(client);
