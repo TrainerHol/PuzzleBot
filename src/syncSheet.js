@@ -48,4 +48,4 @@ async function syncSheet() {
   }
 }
 
-module.exports = syncSheet;
+module.exports = { syncSheet };
