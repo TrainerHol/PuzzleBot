@@ -99,7 +99,7 @@ client.once("ready", () => {
     // cron.schedule("*/3 * * * *", downloadPuzzles);
 
     // Schedule the syncSheet function every 24 hours
-    cron.schedule("0 0 */24 * * *", syncSheet);
+    cron.schedule("0 0 */12 * * *", syncSheet);
 
     for (const file of functions) {
       require(`./functions/${file}`)(client);
