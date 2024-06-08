@@ -94,12 +94,12 @@ client.once("ready", () => {
     //await downloadPuzzles();
 
     // Schedule the puzzle download every 12 hours
-    cron.schedule("0 */12 * * *", downloadPuzzles);
+    cron.schedule("0 0 */6 * * *", downloadPuzzles);
     // Schedule the puzzle download every 3 minutes for testing
     // cron.schedule("*/3 * * * *", downloadPuzzles);
 
-    // Schedule the syncSheet function every 24 hours
-    cron.schedule("0 0 */12 * * *", syncSheet);
+    // Schedule the syncSheet function every 12 hours
+    cron.schedule("0 0 */6 * * *", syncSheet);
 
     for (const file of functions) {
       require(`./functions/${file}`)(client);
