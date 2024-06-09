@@ -7,7 +7,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setDMPermission(false)
     .setName("address")
-    .setDescription("Search for a puzzle by name or builder")
+    .setDescription("Search for a puzzle by name/builder/ID")
     .addStringOption((option) =>
       option
         .setName("name")
@@ -19,14 +19,18 @@ module.exports = {
         .setName("builder")
         .setDescription("The builder name")
         .setRequired(false),
+    )
+    .addStringOption((option) =>
+      option.setName("id").setDescription("The puzzle ID").setRequired(false),
     ),
   async execute(interaction) {
     const puzzleName = interaction.options.getString("name");
     const builderName = interaction.options.getString("builder");
+    const puzzleId = interaction.options.getString("id");
 
-    if (!puzzleName && !builderName) {
+    if (!puzzleName && !builderName && !puzzleId) {
       await interaction.reply(
-        "Please provide either a puzzle name or a builder name.",
+        "Please provide a puzzle name, builder name, or puzzle ID.",
       );
       return;
     }
@@ -39,8 +43,11 @@ module.exports = {
       if (builderName) {
         whereClause.Builder = { [Op.like]: `%${builderName}%` };
       }
+      if (puzzleId) {
+        whereClause.ID = puzzleId.padStart(5, "0");
+      }
 
-      const limit = 3;
+      const limit = 6;
       const order = builderName && !puzzleName ? [["ID", "DESC"]] : undefined;
 
       const results = await Puzzles.findAll({
@@ -66,7 +73,6 @@ module.exports = {
         const datacenter = puzzle.Datacenter;
         const goals = puzzle.GoalsRules;
         const id = puzzle.ID;
-        // puzzle.M E S P V J G L X
         const tags = `${puzzle.M}${puzzle.E}${puzzle.S}${puzzle.P}${puzzle.V}${puzzle.J}${puzzle.G}${puzzle.L}${puzzle.X}`;
 
         let stars = "";
