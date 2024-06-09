@@ -36,22 +36,31 @@ module.exports = {
     const characterName = interaction.options.getString("character_name");
     const cardPhoto = interaction.options.getAttachment("card_photo");
 
-    const userBadges = await Badges.findAll({
+    const userClears = await Clears.findAll({
       where: {
-        "$puzzles.clears.jumper$": interaction.user.id,
+        jumper: interaction.user.id,
       },
+      attributes: ["puzzleId"],
+    });
+
+    const userClearedPuzzleIds = userClears.map((clear) => clear.puzzleId);
+
+    const userBadges = await Badges.findAll({
       include: [
         {
           model: Puzzles,
           as: "puzzles",
-          include: [
-            {
-              model: Clears,
-              as: "clears",
-            },
-          ],
+          attributes: ["ID"],
+          through: { attributes: [] },
         },
       ],
+    });
+
+    const earnedBadges = userBadges.filter((badge) => {
+      const requiredPuzzleIds = badge.puzzles.map((puzzle) => puzzle.ID);
+      return requiredPuzzleIds.every((puzzleId) =>
+        userClearedPuzzleIds.includes(puzzleId),
+      );
     });
 
     let existingSettings = await CardSettings.findOne({
@@ -81,13 +90,13 @@ module.exports = {
       await existingSettings.save();
     }
 
-    if (userBadges.length >= 1 && userBadges.length < 25) {
+    if (earnedBadges.length >= 1 && earnedBadges.length < 25) {
       const favoriteBadgeMenu = new StringSelectMenuBuilder()
         .setCustomId("favorite_badge")
         .setPlaceholder("Select your favorite badge")
         .addOptions(
           new StringSelectMenuOptionBuilder().setLabel("None").setValue("none"),
-          ...userBadges.map((badge) =>
+          ...earnedBadges.map((badge) =>
             new StringSelectMenuOptionBuilder()
               .setLabel(badge.name)
               .setValue(badge.id.toString()),
@@ -98,10 +107,10 @@ module.exports = {
         .setCustomId("display_badges")
         .setPlaceholder("Select badges to display on your card (up to 8)")
         .setMinValues(0)
-        .setMaxValues(Math.min(userBadges.length, 8))
+        .setMaxValues(Math.min(earnedBadges.length, 8))
         .addOptions(
           new StringSelectMenuOptionBuilder().setLabel("None").setValue("none"),
-          ...userBadges.map((badge) =>
+          ...earnedBadges.map((badge) =>
             new StringSelectMenuOptionBuilder()
               .setLabel(badge.name)
               .setValue(badge.id.toString()),
@@ -192,7 +201,7 @@ module.exports = {
           });
         }
       });
-    } else if (userBadges.length >= 25) {
+    } else if (earnedBadges.length >= 25) {
       const modal = new ModalBuilder()
         .setCustomId("card_settings_modal")
         .setTitle("Card Settings");
