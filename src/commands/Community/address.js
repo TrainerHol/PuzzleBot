@@ -57,9 +57,10 @@ module.exports = {
       });
 
       if (results.length === 0) {
-        await interaction.reply(
-          "No puzzles found matching your search criteria.",
-        );
+        await interaction.reply({
+          content: "No puzzles found matching your search criteria.",
+          ephemeral: true,
+        });
         return;
       }
 
@@ -91,9 +92,11 @@ module.exports = {
       await interaction.reply({ content: response, ephemeral: true });
     } catch (error) {
       console.error("Error searching for puzzle:", error);
-      await interaction.reply(
-        "An error occurred while searching for the puzzle. Please try again later.",
-      );
+      await interaction.reply({
+        content:
+          "An error occurred while searching for the puzzle. Please try again later.",
+        ephemeral: true,
+      });
     }
   },
 };
