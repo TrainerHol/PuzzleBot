@@ -23,8 +23,11 @@ module.exports = {
       .split(/[\s,]+/)
       .filter((id) => id.trim() !== "");
 
-    let replyMessages = [];
+    let successMessages = [];
+    let errorMessages = [];
+    let totalMessages = 0;
     let clearedPuzzles = 0;
+    let failedPuzzles = 0;
 
     for (let puzzleId of puzzleIds) {
       // Pad the puzzle ID with leading zeros to a length of 5
@@ -35,7 +38,11 @@ module.exports = {
         const puzzle = await Puzzles.findOne({ where: { ID: puzzleId } });
 
         if (!puzzle) {
-          replyMessages.push(`❌Puzzle with ID ${puzzleId} not found.`);
+          if (totalMessages < 25) {
+            errorMessages.push(`❌Puzzle with ID ${puzzleId} not found.`);
+            totalMessages++;
+          }
+          failedPuzzles++;
           continue;
         }
 
@@ -46,10 +53,11 @@ module.exports = {
         });
 
         const puzzleName = puzzle.PuzzleName;
-        if (clearedPuzzles < 25) {
-          replyMessages.push(
+        if (totalMessages < 25) {
+          successMessages.push(
             `✅Your clear of **${puzzleName}** has been recorded.`,
           );
+          totalMessages++;
         }
         clearedPuzzles++;
       } catch (error) {
@@ -57,25 +65,33 @@ module.exports = {
           "❌Error recording clear for puzzle ID " + puzzleId + ":",
           error,
         );
-        replyMessages.push(
-          "❌An error occurred while recording your clear for puzzle ID " +
-            puzzleId +
-            ". Please try again later.",
-        );
+        if (totalMessages < 25) {
+          errorMessages.push(
+            "❌Error recording clear for puzzle ID " +
+              puzzleId +
+              ". Already cleared or doesn't exist!",
+          );
+          totalMessages++;
+        }
+        failedPuzzles++;
       }
     }
 
-    // Summarize the message if there are more than 25 puzzles
-    if (clearedPuzzles > 25) {
-      const remainingPuzzles = clearedPuzzles - 25;
-      replyMessages.push(`...and ${remainingPuzzles} other puzzles.`);
+    // Summarize the messages if there are more than 25 total messages
+    if (totalMessages > 25) {
+      const remainingPuzzles = clearedPuzzles + failedPuzzles - 25;
+      successMessages.push(
+        `...and ${remainingPuzzles} other puzzles processed.`,
+      );
     }
 
     // Combine all messages into a single reply
     const embed = new EmbedBuilder()
       .setColor("#00ff00")
       .setTitle("Clear(s) Recorded")
-      .setDescription(replyMessages.join("\n"));
+      .setDescription(
+        successMessages.join("\n") + "\n" + errorMessages.join("\n"),
+      );
 
     await interaction.reply({ embeds: [embed] });
   },

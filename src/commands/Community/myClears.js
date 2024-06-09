@@ -8,7 +8,7 @@ const {
 const Clears = require("../../../models/clears");
 const Puzzles = require("../../../models/puzzles");
 
-const CLEARS_PER_PAGE = 10;
+const CLEARS_PER_PAGE = 25;
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -89,7 +89,7 @@ module.exports = {
     const filter = (i) => i.user.id === interaction.user.id;
     const collector = message.createMessageComponentCollector({
       filter,
-      time: 60000,
+      time: 240000,
     });
 
     collector.on("collect", async (i) => {
