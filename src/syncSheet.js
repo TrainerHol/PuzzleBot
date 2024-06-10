@@ -24,7 +24,7 @@ async function syncSheet() {
     // Prepare the data for the API request
     const data = clearRecords.map((record) => ({
       jumper: record.jumper,
-      puzzle: record.puzzleId,
+      puzzle: record.puzzleId.toString().padStart(5, "0"),
     }));
 
     // Send the POST request to add clear records to the API
