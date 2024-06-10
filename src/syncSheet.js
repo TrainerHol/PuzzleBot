@@ -7,6 +7,17 @@ const migrationToken = process.env.migrationToken;
 
 async function syncSheet() {
   try {
+    // Delete all entries from the SheetDB
+    await axios.delete(migrationURL + "/all", {
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${migrationToken}`,
+      },
+    });
+
+    console.log("All entries deleted from SheetDB.");
+
     // Fetch all clear records from the database
     const clearRecords = await Clears.findAll();
 
@@ -32,17 +43,6 @@ async function syncSheet() {
     );
 
     console.log("Clear records synced successfully.");
-
-    // Send the DELETE request to remove duplicates from the API
-    await axios.delete(`${migrationURL}/duplicates`, {
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${migrationToken}`,
-      },
-    });
-
-    console.log("Duplicates removed successfully.");
   } catch (error) {
     console.error("Error syncing clear records:", error.message);
   }
