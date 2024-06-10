@@ -93,6 +93,10 @@ module.exports = {
         successMessages.join("\n") + "\n" + errorMessages.join("\n"),
       );
 
-    await interaction.reply({ embeds: [embed] });
+    try {
+      await interaction.reply({ embeds: [embed] });
+    } catch (error) {
+      console.error("Error replying to interaction:", error);
+    }
   },
 };
