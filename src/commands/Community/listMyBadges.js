@@ -148,13 +148,17 @@ module.exports = {
     });
 
     collector.on("end", async () => {
-      const disabledButtons = new ActionRowBuilder();
-      initialButtons.components.forEach((button) => {
-        button.setDisabled(true);
-        disabledButtons.addComponents(button);
-      });
+      try {
+        const disabledButtons = new ActionRowBuilder();
+        initialButtons.components.forEach((button) => {
+          button.setDisabled(true);
+          disabledButtons.addComponents(button);
+        });
 
-      await message.edit({ components: [disabledButtons] });
+        await message.edit({ components: [disabledButtons] });
+      } catch (error) {
+        console.error("Error fetching badges:", error.message);
+      }
     });
   },
 };
