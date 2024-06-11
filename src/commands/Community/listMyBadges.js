@@ -69,7 +69,7 @@ module.exports = {
       const currentBadges = earnedBadges.slice(startIndex, endIndex);
 
       const badgeList = currentBadges
-        .map((badge, index) => `${startIndex + index + 1}. ${badge.name}`)
+        .map((badge) => `#${badge.id} ${badge.name}`)
         .join("\n");
 
       const embed = new EmbedBuilder()
