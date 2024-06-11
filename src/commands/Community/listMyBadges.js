@@ -13,12 +13,20 @@ const { Op } = require("sequelize");
 module.exports = {
   data: new SlashCommandBuilder()
     .setDMPermission(false)
-    .setName("mybadges")
-    .setDescription("List all the badges you currently have"),
+    .setName("badges")
+    .setDescription("List all badges for you or another user")
+    .addUserOption((option) =>
+      option
+        .setName("user")
+        .setDescription("The user to view badges for")
+        .setRequired(false),
+    ),
   async execute(interaction) {
+    const targetUser = interaction.options.getUser("user") || interaction.user;
+
     const userClears = await Clears.findAll({
       where: {
-        jumper: interaction.user.id,
+        jumper: targetUser.id,
       },
       attributes: ["puzzleId"],
     });
@@ -45,7 +53,7 @@ module.exports = {
 
     if (earnedBadges.length === 0) {
       await interaction.reply({
-        content: "You don't have any badges yet.",
+        content: `${targetUser.username} doesn't have any badges yet.`,
         ephemeral: true,
       });
       return;
@@ -65,7 +73,7 @@ module.exports = {
         .join("\n");
 
       const embed = new EmbedBuilder()
-        .setTitle(`${interaction.user.username}'s Badges`)
+        .setTitle(`${targetUser.username}'s Badges`)
         .setDescription(badgeList)
         .setColor("#0099ff")
         .setTimestamp()
@@ -105,6 +113,7 @@ module.exports = {
 
     const messageOptions = {
       embeds: [initialEmbed],
+      ephemeral: true,
     };
 
     if (initialButtons.components.length > 0) {
