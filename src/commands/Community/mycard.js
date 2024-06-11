@@ -121,7 +121,7 @@ module.exports = {
           blankImage,
           true,
         );
-        ctx.drawImage(favBadgeImage, 269, 292, 141, 135);
+        ctx.drawImage(favBadgeImage, 269, 285, 145, 145);
 
         ctx.font = '22px "OpenSans"';
         ctx.fillStyle = "rgb(118, 92, 73)";
