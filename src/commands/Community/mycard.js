@@ -13,8 +13,12 @@ const cdn = process.env.DISCORD_CDN;
 
 async function loadImageWithFallback(url, fallbackImage, useCDN = false) {
   try {
+    console.log(
+      `Attempting to load image from: ${useCDN ? `${cdn}${url}` : url}`,
+    );
     const imageUrl = useCDN ? `${cdn}${url}` : url;
     const image = await loadImage(imageUrl);
+    console.log("Successfully loaded image");
     return image;
   } catch (error) {
     console.error(`Failed to load image: ${url}. Using fallback image.`);
@@ -35,11 +39,14 @@ module.exports = {
     ),
   async execute(interaction) {
     try {
+      console.log("Starting mycard command execution");
       await interaction.deferReply({ ephemeral: false });
 
       const user = interaction.options.getUser("user") || interaction.user;
       const member = await interaction.guild.members.fetch(user.id);
+      console.log(`Processing card for user: ${user.tag}`);
 
+      console.log("Fetching card settings");
       const cardSettings = await CardSettings.findOne({
         where: { userId: user.id },
       });
@@ -47,6 +54,7 @@ module.exports = {
       const avatarURL = cardSettings?.cardPhotoUrl
         ? cardSettings.cardPhotoUrl
         : user.displayAvatarURL({ extension: "png", size: 256 });
+      console.log(`Using avatar URL: ${avatarURL}`);
 
       const characterName =
         cardSettings?.characterName || member.displayName || user.tag;
@@ -64,9 +72,11 @@ module.exports = {
         family: "OpenSans",
       });
 
+      console.log("Loading template and basic images");
       const template = await loadImage(
         path.join(__dirname, "../../../src/img/Template.png"),
       );
+      console.log("Template loaded");
       const expBarFill = await loadImage(
         path.join(__dirname, "../../../src/img/ExpBarFill.png"),
       );
@@ -184,10 +194,12 @@ module.exports = {
         );
       }
 
+      console.log("Starting database queries for puzzle stats");
       const clearedPuzzleIds = await Clears.findAll({
         attributes: ["puzzleId"],
         where: { jumper: user.id },
       });
+      console.log(`Found ${clearedPuzzleIds.length} cleared puzzles`);
 
       const puzzleIds = clearedPuzzleIds.map((clear) => clear.puzzleId);
 
@@ -237,15 +249,18 @@ module.exports = {
       const expBarWidth = (globalPercentage / 100) * 419;
       ctx.drawImage(expBarFill, 26, 516, expBarWidth, 28);
 
+      console.log("Generating final image");
       const attachment = new AttachmentBuilder(canvas.toBuffer(), {
         name: "user-card.png",
       });
 
+      console.log("Sending reply");
       await interaction.editReply({
         content: "",
         files: [attachment],
         ephemeral: false,
       });
+      console.log("Command completed successfully");
     } catch (error) {
       console.error("An error occurred while generating the user card:", error);
       await interaction.editReply({
