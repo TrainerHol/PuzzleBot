@@ -94,8 +94,8 @@ client.once("ready", () => {
     await downloadPuzzles();
     await syncSheet();
 
-    // Schedule the puzzle download every 12 hours
-    cron.schedule("0 0 */6 * * *", downloadPuzzles);
+    // Schedule the puzzle download every hour
+    cron.schedule("0 * * * *", downloadPuzzles);
     // Schedule the puzzle download every 3 minutes for testing
     // cron.schedule("*/3 * * * *", downloadPuzzles);
 
