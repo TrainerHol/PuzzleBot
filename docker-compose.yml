@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  puzzlebot:
+    build: .
+    container_name: puzzlebot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      # Mount local database.sqlite to ensure we always use the local file
+      - ./database.sqlite:/app/database.sqlite
+    environment:
+      - NODE_ENV=production
