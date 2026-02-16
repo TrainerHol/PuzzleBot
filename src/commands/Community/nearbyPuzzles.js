@@ -7,6 +7,10 @@ const {
 } = require("discord.js");
 const Puzzles = require("../../../models/puzzles");
 const { Op } = require("sequelize");
+const {
+  getPlayerRatingByPuzzleId,
+  formatPlayerRatingShort,
+} = require("../../lib/playerRatings");
 
 const PUZZLES_PER_PAGE = 10;
 
@@ -103,6 +107,15 @@ module.exports = {
       return;
     }
 
+    let playerRatingsById = new Map();
+    try {
+      playerRatingsById = await getPlayerRatingByPuzzleId(
+        puzzles.map((p) => p.ID),
+      );
+    } catch {
+      playerRatingsById = new Map();
+    }
+
     const totalPages = Math.ceil(puzzles.length / PUZZLES_PER_PAGE);
     let currentPage = 1;
 
@@ -114,7 +127,9 @@ module.exports = {
       const puzzleList = puzzlesOnPage
         .map((puzzle) => {
           const address = puzzle.Address.replace("Apartment", "Apt");
-          return `\`${puzzle.ID}\` ${puzzle.Rating}★ ${puzzle.PuzzleName} by ${puzzle.Builder} | ${address}`;
+          const pr = formatPlayerRatingShort(playerRatingsById.get(puzzle.ID));
+          const prSuffix = pr ? ` • ${pr}` : "";
+          return `\`${puzzle.ID}\` ${puzzle.Rating}★ ${puzzle.PuzzleName} by ${puzzle.Builder} | ${address}${prSuffix}`;
         })
         .join("\n");
 

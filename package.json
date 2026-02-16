@@ -14,6 +14,7 @@
   "version": "1.0.0",
   "main": "src/index.js",
   "scripts": {
+    "migrate": "node src/migrations/20260216_add_league_and_ratings.js",
     "test": "node src/index.js"
   },
   "author": "",

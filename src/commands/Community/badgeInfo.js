@@ -8,6 +8,10 @@ const {
 const Badges = require("../../../models/badges");
 const Puzzles = require("../../../models/puzzles");
 const { Op } = require("sequelize");
+const {
+  getPlayerRatingByPuzzleId,
+  formatPlayerRatingShort,
+} = require("../../lib/playerRatings");
 
 const PUZZLES_PER_PAGE = 10;
 
@@ -47,6 +51,15 @@ module.exports = {
         return;
       }
 
+      let playerRatingsById = new Map();
+      try {
+        playerRatingsById = await getPlayerRatingByPuzzleId(
+          badge.puzzles.map((p) => p.ID),
+        );
+      } catch {
+        playerRatingsById = new Map();
+      }
+
       const totalPages = Math.ceil(badge.puzzles.length / PUZZLES_PER_PAGE);
       let currentPage = 1;
 
@@ -62,7 +75,9 @@ module.exports = {
             const formattedRating = Rating.match(/^[A-Z]$/)
               ? `${Rating}★`
               : `${"★".repeat(parseInt(Rating))}`;
-            return `\`${ID}\` **${PuzzleName}** (${Address} <${World}/${Datacenter}>) ${formattedRating}`;
+            const pr = formatPlayerRatingShort(playerRatingsById.get(ID));
+            const prSuffix = pr ? ` • ${pr}` : "";
+            return `\`${ID}\` **${PuzzleName}** (${Address} <${World}/${Datacenter}>) ${formattedRating}${prSuffix}`;
           })
           .join("\n");
 

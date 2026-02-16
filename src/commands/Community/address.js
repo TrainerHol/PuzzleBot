@@ -2,6 +2,10 @@ const { SlashCommandBuilder } = require("@discordjs/builders");
 const { EmbedBuilder } = require("discord.js");
 const { Op } = require("sequelize");
 const Puzzles = require("../../../models/puzzles");
+const {
+  getPlayerRatingByPuzzleId,
+  formatPlayerRating,
+} = require("../../lib/playerRatings");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -64,6 +68,15 @@ module.exports = {
         return;
       }
 
+      let playerRatingsById = new Map();
+      try {
+        playerRatingsById = await getPlayerRatingByPuzzleId(
+          results.map((p) => p.ID),
+        );
+      } catch {
+        playerRatingsById = new Map();
+      }
+
       let response = "";
       for (const puzzle of results) {
         const puzzleNameResult = puzzle.PuzzleName;
@@ -84,7 +97,10 @@ module.exports = {
           stars = "★".repeat(numStars) + "☆".repeat(5 - numStars);
         }
 
-        response += `- **__${id} ${puzzleNameResult}__** by ${builder} [${tags}]\n**Address:** (${address}, ${world}, ${datacenter}) ${stars}\n`;
+        const playerRatingText = formatPlayerRating(playerRatingsById.get(id));
+        const playerSuffix = playerRatingText ? ` • ${playerRatingText}` : "";
+
+        response += `- **__${id} ${puzzleNameResult}__** by ${builder} [${tags}]\n**Address:** (${address}, ${world}, ${datacenter}) ${stars}${playerSuffix}\n`;
         response += goals ? `**Goals/Rules:** ${goals}\n` : "";
       }
       response += "";
