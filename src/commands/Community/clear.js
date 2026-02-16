@@ -40,9 +40,9 @@ function formatPuzzleName(puzzleName) {
   return trim(String(puzzleName), 80);
 }
 
-function classifyColor({ recordedCount, alreadyClearedCount, notFoundCount, otherErrorCount }) {
+function classifyColor({ recordedCount, reclearedCount, notFoundCount, otherErrorCount }) {
   if (otherErrorCount > 0) return 0xff3b30;
-  if (notFoundCount > 0 || alreadyClearedCount > 0) return 0xffcc00;
+  if (notFoundCount > 0 || reclearedCount > 0) return 0xffcc00;
   if (recordedCount > 0) return 0x34c759;
   return 0x8e8e93;
 }
@@ -60,7 +60,7 @@ function buildCategoryLine(label, ids) {
 function buildCountsLine({ total, recordedCount, alreadyClearedCount, notFoundCount, otherErrorCount }) {
   const parts = [
     `${recordedCount} recorded`,
-    `${alreadyClearedCount} already cleared`,
+    `${alreadyClearedCount} recleared`,
     `${notFoundCount} not found`,
   ];
   if (otherErrorCount > 0) parts.push(`${otherErrorCount} error(s)`);
@@ -91,9 +91,10 @@ module.exports = {
     const puzzleIdsInput = interaction.options.getString("puzzleids");
     const puzzleIds = normalizePuzzleIds(puzzleIdsInput);
     const userId = interaction.user.id;
+    const now = new Date();
 
     const notFoundIds = [];
-    const alreadyClearedIds = [];
+    const reclearedIds = [];
     const recordedIds = [];
     const otherErrorIds = [];
 
@@ -129,15 +130,20 @@ module.exports = {
     }
 
     const toCreateIds = [];
+    const toUpdateIds = [];
     for (const id of foundIdsInOrder) {
       if (existingClearSet.has(id)) {
-        alreadyClearedIds.push(id);
+        toUpdateIds.push(id);
       } else {
         toCreateIds.push(id);
       }
     }
 
-    const createRows = toCreateIds.map((id) => ({ jumper: userId, puzzleId: id }));
+    const createRows = toCreateIds.map((id) => ({
+      jumper: userId,
+      puzzleId: id,
+      lastClearedAt: now,
+    }));
 
     const isUniqueConstraintError = (error) => {
       if (!error || typeof error !== "object") return false;
@@ -157,13 +163,38 @@ module.exports = {
 
       for (const id of toCreateIds) {
         try {
-          await Clears.create({ jumper: userId, puzzleId: id });
+          await Clears.create({ jumper: userId, puzzleId: id, lastClearedAt: now });
           recordedIds.push(id);
         } catch (innerError) {
           if (isUniqueConstraintError(innerError)) {
-            alreadyClearedIds.push(id);
+            toUpdateIds.push(id);
             continue;
           }
+          otherErrorIds.push(id);
+        }
+      }
+    }
+
+    try {
+      for (const idsChunk of chunkArray(toUpdateIds, 900)) {
+        if (idsChunk.length === 0) continue;
+        await Clears.update(
+          { lastClearedAt: now },
+          { where: { jumper: userId, puzzleId: idsChunk } },
+        );
+      }
+      for (const id of toUpdateIds) reclearedIds.push(id);
+    } catch (error) {
+      console.error("Error updating reclear timestamps in bulk:", error);
+
+      for (const id of toUpdateIds) {
+        try {
+          await Clears.update(
+            { lastClearedAt: now },
+            { where: { jumper: userId, puzzleId: id } },
+          );
+          reclearedIds.push(id);
+        } catch (innerError) {
           otherErrorIds.push(id);
         }
       }
@@ -183,7 +214,7 @@ module.exports = {
     };
 
     const recordedSet = new Set(recordedIds);
-    const alreadySet = new Set(alreadyClearedIds);
+    const reclearedSet = new Set(reclearedIds);
     const notFoundSet = new Set(notFoundIds);
     const otherErrorSet = new Set(otherErrorIds);
 
@@ -195,10 +226,10 @@ module.exports = {
           if (!appendLine(`✅ \`${id}\`${namePart} recorded.`)) break;
           continue;
         }
-        if (alreadySet.has(id)) {
+        if (reclearedSet.has(id)) {
           const puzzleName = formatPuzzleName(puzzleById.get(id)?.PuzzleName);
           const namePart = puzzleName ? ` **${puzzleName}**` : "";
-          if (!appendLine(`ℹ️ \`${id}\`${namePart} already cleared.`)) break;
+          if (!appendLine(`🔁 \`${id}\`${namePart} recleared.`)) break;
           continue;
         }
         if (notFoundSet.has(id)) {
@@ -212,7 +243,7 @@ module.exports = {
     } else {
       const categoryLines = [
         buildCategoryLine("Recorded", recordedIds),
-        buildCategoryLine("Already cleared", alreadyClearedIds),
+        buildCategoryLine("Recleared", reclearedIds),
         buildCategoryLine("Not found", notFoundIds),
         buildCategoryLine("Other errors", otherErrorIds),
       ].filter((line) => line !== null);
@@ -229,7 +260,7 @@ module.exports = {
       buildCountsLine({
         total: puzzleIds.length,
         recordedCount: recordedIds.length,
-        alreadyClearedCount: alreadyClearedIds.length,
+        alreadyClearedCount: reclearedIds.length,
         notFoundCount: notFoundIds.length,
         otherErrorCount: otherErrorIds.length,
       }),
@@ -239,7 +270,7 @@ module.exports = {
       .setColor(
         classifyColor({
           recordedCount: recordedIds.length,
-          alreadyClearedCount: alreadyClearedIds.length,
+          reclearedCount: reclearedIds.length,
           notFoundCount: notFoundIds.length,
           otherErrorCount: otherErrorIds.length,
         }),

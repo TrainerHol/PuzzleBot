@@ -17,6 +17,10 @@ const Clears = sequelize.define(
       type: Sequelize.STRING,
       allowNull: false,
     },
+    lastClearedAt: {
+      type: Sequelize.DATE,
+      allowNull: true,
+    },
   },
   {
     indexes: [

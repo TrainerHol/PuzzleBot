@@ -1,9 +1,13 @@
 const sequelize = require("../utils/database");
+const Sequelize = require("sequelize");
 const Clears = require("../models/clears");
 const Puzzles = require("../models/puzzles");
 const Badges = require("../models/badges");
 const BadgePuzzles = require("../models/badgePuzzles");
 const CardSettings = require("../models/cardSettings");
+const LeagueSeasons = require("../models/leagueSeasons");
+const LeagueTiers = require("../models/leagueTiers");
+const LeagueTierPuzzles = require("../models/leagueTierPuzzles");
 const axios = require("axios");
 const { downloadAndInsertPuzzles } = require("./downloadpuzzles");
 require("dotenv").config();
@@ -47,9 +51,16 @@ async function initializeDatabase() {
 
     await Puzzles.sync({ alter: true });
     await Clears.sync({ alter: true });
+    await Clears.update(
+      { lastClearedAt: Sequelize.col("createdAt") },
+      { where: { lastClearedAt: null } },
+    );
     await Badges.sync({ alter: true });
     await BadgePuzzles.sync({ alter: true });
     await CardSettings.sync({ alter: true });
+    await LeagueSeasons.sync({ alter: true });
+    await LeagueTiers.sync({ alter: true });
+    await LeagueTierPuzzles.sync({ alter: true });
 
     // Call the downloadAndInsertPuzzles function from downloadpuzzles.js
     await downloadAndInsertPuzzles();
